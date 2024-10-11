@@ -1,0 +1,105 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Poppins', sans-serif;
+}
+
+body {
+    background-color: #f7f9fc;
+    
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+.container {
+    background-color: white;
+    padding: 40px;
+    border-radius: 15px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    max-width: 600px;
+    width: 100%;
+    text-align: center;
+}
+
+h2 {
+    font-size: 28px;
+    margin-bottom: 30px;
+    color: #2C3E50;
+}
+
+.input-group {
+    margin-bottom: 20px;
+    text-align: left;
+}
+
+.input-group label {
+    display: block;
+    margin-bottom: 10px;
+    font-size: 16px;
+    color: #555;
+}
+
+.input-group input, .input-group select {
+    width: 100%;
+    padding: 12px;
+    font-size: 16px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    background-color: #f7f9fc;
+}
+
+.btn {
+    width: 100%;
+    padding: 12px;
+    background-color: #6A82FB;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.btn:hover {
+    background-color: #FC5C7D;
+}
+
+.medication-list h3 {
+    margin-top: 30px;
+    font-size: 24px;
+}
+
+.medication-list ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+.medication-list li {
+    background-color: #f7f9fc;
+    padding: 15px;
+    margin-bottom: 10px;
+    border-radius: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.edit-btn, .delete-btn {
+    background-color: #6A82FB;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 5px 10px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.edit-btn:hover {
+    background-color: #57a7f9;
+}
+
+.delete-btn:hover {
+    background-color: #fc5c7d;
+}

@@ -1,0 +1,73 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Poppins', sans-serif;
+}
+
+body {
+    background-color: #f5f8fb;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+.container {
+    background-color: #fff;
+    padding: 40px;
+    border-radius: 12px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+    max-width: 600px;
+    width: 100%;
+    text-align: center;
+}
+
+h2 {
+    font-size: 28px;
+    color: #2C3E50;
+    margin-bottom: 20px;
+}
+
+p {
+    color: #34495e;
+    margin-bottom: 30px;
+}
+
+.notifications-settings h3 {
+    font-size: 22px;
+    margin-bottom: 20px;
+    color: #f39c12;
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+    align-items: start;
+}
+
+label {
+    margin-bottom: 10px;
+    color: #34495e;
+}
+
+input, select {
+    margin-bottom: 20px;
+    padding: 8px;
+    width: 100%;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+}
+
+.save-btn {
+    background-color: #f39c12;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 10px 20px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.save-btn:hover {
+    background-color: #e67e22;
+}
