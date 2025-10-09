@@ -56,6 +56,16 @@ app.use('/api/providers', providerRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/users', userRoutes);
 
+// Root landing route
+app.get('/', (req, res) => {
+  res.json({
+    status: 'OK',
+    message: 'MedRoutine API',
+    health: '/api/health',
+    timestamp: new Date().toISOString()
+  });
+});
+
 // Health check
 app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', timestamp: new Date().toISOString() });
