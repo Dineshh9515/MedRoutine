@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { protect } = require('../middleware/auth');
+const User = require('../models/User');
 
 // @route   GET /api/notifications
 // @desc    Get all notifications for user
