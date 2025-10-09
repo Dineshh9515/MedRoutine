@@ -23,7 +23,10 @@ const userRoutes = require('./routes/users');
 const { startScheduler } = require('./utils/reminderScheduler');
 
 // Middleware
-app.use(helmet());
+// Allow cross-origin assets like Google Fonts
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: 'cross-origin' }
+}));
 app.use(cors({
   origin: process.env.CLIENT_URL || 'http://localhost:3000',
   credentials: true
@@ -60,14 +63,9 @@ app.use('/api/providers', providerRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/users', userRoutes);
 
-// Root landing route
+// Root landing route serves SPA index
 app.get('/', (req, res) => {
-  res.json({
-    status: 'OK',
-    message: 'MedRoutine API',
-    health: '/api/health',
-    timestamp: new Date().toISOString()
-  });
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 // Health check
@@ -85,12 +83,16 @@ app.use((err, req, res, next) => {
   });
 });
 
-// 404 handler
+// SPA fallback for non-API GET routes
+app.get('*', (req, res, next) => {
+  if (req.path.startsWith('/api')) return next();
+  if (req.method !== 'GET') return next();
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+// 404 handler (API and others)
 app.use((req, res) => {
-  res.status(404).json({
-    success: false,
-    message: 'Route not found'
-  });
+  res.status(404).json({ success: false, message: 'Route not found' });
 });
 
 const PORT = process.env.PORT || 5000;
