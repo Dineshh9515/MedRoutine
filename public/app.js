@@ -6,7 +6,16 @@ function loadAuth(){ const t = localStorage.getItem('token'); const u = localSto
 function headers(json=true){ const h = {}; if(json){ h['Content-Type']='application/json'; } if(state.token){ h['Authorization']='Bearer '+state.token; } return h; }
 
 function link(href,label){ const a=document.createElement('a'); a.href=href; a.textContent=label; a.className='navlink'; if(location.hash===href) a.classList.add('active'); a.addEventListener('click', (e)=>{ e.preventDefault(); navigate(href); }); return a; }
-function setView(html){ document.getElementById('view').innerHTML = html; }
+function setView(html){
+  const v = document.getElementById('view');
+  document.body.classList.remove('route-ready');
+  v.innerHTML = html;
+  requestAnimationFrame(()=>{
+    document.body.classList.add('route-ready');
+    initReveal();
+    initCardTilt();
+  });
+}
 function renderNav(){ const nav = document.getElementById('nav'); nav.innerHTML=''; if(state.user){ nav.append(
   link('#/dashboard','Dashboard'),
   link('#/medications','Medications'),
@@ -123,6 +132,12 @@ async function viewMedications(){ if(!guard()) return; setView(`
   </div>
 `);
   const renderList = async ()=>{
+    // skeleton
+    document.getElementById('med_list').innerHTML = `
+      <div class="skeleton line" style="width:60%"></div>
+      <div class="skeleton line" style="width:80%"></div>
+      <div class="skeleton line" style="width:70%"></div>
+    `;
     const { data } = await api('/medications', { headers: headers(false) });
     const rows = data.medications.map(m=>`
       <tr>
@@ -164,6 +179,11 @@ async function viewReminders(){ if(!guard()) return; setView(`
   </div>
 `);
   const renderList = async ()=>{
+    document.getElementById('rem_list').innerHTML = `
+      <div class="skeleton line" style="width:60%"></div>
+      <div class="skeleton line" style="width:80%"></div>
+      <div class="skeleton line" style="width:70%"></div>
+    `;
     const { data } = await api('/reminders', { headers: headers(false) });
     const rows = data.reminders.map(r=>`
       <tr>
@@ -273,4 +293,57 @@ function route(){ renderNav(); const r = location.hash.replace('#',''); switch(r
   window.addEventListener('hashchange', route);
   renderNav();
   route();
+  // Pointer glow tracking
+  const glow = document.getElementById('pointer-glow');
+  let raf;
+  window.addEventListener('pointermove', (e)=>{
+    document.body.classList.add('pointer-enabled');
+    const x = e.clientX + 'px';
+    const y = e.clientY + 'px';
+    cancelAnimationFrame(raf);
+    raf = requestAnimationFrame(()=>{
+      glow.style.setProperty('--x', x);
+      glow.style.setProperty('--y', y);
+    });
+  });
 })();
+
+// Scroll reveal: add .reveal to cards and reveal when in viewport
+function initReveal(){
+  const prefersReduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const elements = Array.from(document.querySelectorAll('.card'));
+  elements.forEach(el=>el.classList.add('reveal'));
+  if(prefersReduce) { elements.forEach(el=>el.classList.add('in')); return; }
+  const io = new IntersectionObserver((entries)=>{
+    entries.forEach(entry=>{
+      if(entry.isIntersecting){ entry.target.classList.add('in'); }
+    });
+  }, { threshold: 0.15 });
+  elements.forEach(el=>io.observe(el));
+}
+
+// Card tilt micro-interaction
+function initCardTilt(){
+  const prefersReduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if(prefersReduce) return;
+  const maxTilt = 6;
+  const cards = document.querySelectorAll('.card');
+  cards.forEach(card=>{
+    let frame;
+    card.addEventListener('mousemove', (e)=>{
+      const r = card.getBoundingClientRect();
+      const px = (e.clientX - r.left) / r.width; // 0..1
+      const py = (e.clientY - r.top) / r.height;
+      const rx = (py - 0.5) * -2 * maxTilt;
+      const ry = (px - 0.5) * 2 * maxTilt;
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(()=>{
+        card.style.transform = `translateY(-2px) rotateX(${rx}deg) rotateY(${ry}deg)`;
+      });
+    });
+    card.addEventListener('mouseleave', ()=>{
+      cancelAnimationFrame(frame);
+      card.style.transform = '';
+    });
+  });
+}
