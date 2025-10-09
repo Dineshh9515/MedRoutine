@@ -1,13 +1,13 @@
 const express = require('express');
 const router = express.Router();
-const { protect } = require('../middleware/auth');
+const { protect, authorize } = require('../middleware/auth');
 const Medication = require('../models/Medication');
 const Reminder = require('../models/Reminder');
 
 // @route   POST /api/providers/access-request
 // @desc    Request access to patient's medication data
 // @access  Private (Provider role)
-router.post('/access-request', protect, async (req, res) => {
+router.post('/access-request', protect, authorize('provider'), async (req, res) => {
   try {
     const { patientEmail, reason } = req.body;
 
@@ -27,7 +27,7 @@ router.post('/access-request', protect, async (req, res) => {
 // @route   GET /api/providers/patients/:patientId/medications
 // @desc    Get patient's medications (with permission)
 // @access  Private (Provider role)
-router.get('/patients/:patientId/medications', protect, async (req, res) => {
+router.get('/patients/:patientId/medications', protect, authorize('provider'), async (req, res) => {
   try {
     // Verify provider has access to this patient
     // Implementation of permission check would go here
@@ -51,7 +51,7 @@ router.get('/patients/:patientId/medications', protect, async (req, res) => {
 // @route   GET /api/providers/patients/:patientId/adherence
 // @desc    Get patient's adherence statistics
 // @access  Private (Provider role)
-router.get('/patients/:patientId/adherence', protect, async (req, res) => {
+router.get('/patients/:patientId/adherence', protect, authorize('provider'), async (req, res) => {
   try {
     const { startDate, endDate } = req.query;
     

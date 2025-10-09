@@ -78,8 +78,13 @@ reminderSchema.methods.markAsMissed = function() {
 
 // Method to snooze reminder
 reminderSchema.methods.snooze = function(minutes = 15) {
-  this.status = 'snoozed';
-  this.snoozeUntil = new Date(Date.now() + minutes * 60000);
+  const newReminderTime = new Date(Date.now() + minutes * 60000);
+  this.snoozeUntil = newReminderTime;
+  this.scheduledTime = newReminderTime;
+  this.status = 'pending';
+  this.notificationSent = false;
+  this.notificationSentAt = undefined;
+  this.notificationChannels = [];
   return this.save();
 };
 
