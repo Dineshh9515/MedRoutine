@@ -36,7 +36,8 @@ app.use(morgan('combined'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Serve static frontend
+// Serve static frontend and app SPA under /app
+app.use('/app', express.static(path.join(__dirname, 'public')));
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Rate limiting
@@ -83,10 +84,8 @@ app.use((err, req, res, next) => {
   });
 });
 
-// SPA fallback for non-API GET routes
-app.get('*', (req, res, next) => {
-  if (req.path.startsWith('/api')) return next();
-  if (req.method !== 'GET') return next();
+// SPA fallback for /app only
+app.get('/app/*', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 

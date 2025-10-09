@@ -1,27 +1,231 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="scroll-smooth">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>MedRoutine</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MedRoutine - Your Personal Medication Assistant</title>
+  <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/styles.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    body{font-family:'Inter',sans-serif;background:#0A0F1F;color:#E0E0E0}
+    :root{--brand-blue:#106EBE;--brand-mint:#0FFCBE}
+    .text-brand-blue{color:var(--brand-blue)}.text-brand-mint{color:var(--brand-mint)}
+    .bg-brand-blue{background-color:var(--brand-blue)}.bg-brand-mint{background-color:var(--brand-mint)}
+    .glass-effect{background:rgba(16,32,71,.3);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.1)}
+    .hero-gradient-text{background:linear-gradient(90deg,#fff,#a7e0ff,var(--brand-mint));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+    .glow-button{position:relative;overflow:hidden;z-index:1}
+    .glow-button::before{content:'';position:absolute;top:50%;left:50%;width:300%;padding-bottom:300%;border-radius:50%;background:radial-gradient(circle,rgba(15,252,190,.3),transparent 70%);transform:translate(-50%,-50%) scale(0);transition:transform .7s ease;z-index:-1}
+    .glow-button:hover::before{transform:translate(-50%,-50%) scale(1)}
+    .feature-card{transition:transform .3s ease, box-shadow .3s ease}
+    .feature-card:hover{transform:translateY(-8px);box-shadow:0 0 40px rgba(15,252,190,.15)}
+    .reveal{opacity:0;transform:translateY(40px);transition:opacity .8s ease-out,transform .8s ease-out}
+    .reveal.visible{opacity:1;transform:none}
+    #hero-canvas{position:absolute;top:0;left:0;width:100%;height:100%;z-index:0;opacity:.3}
+    .ai-card{min-height:400px}
+    .ai-result{background:#0F172A;border-radius:.5rem;padding:1rem;min-height:100px;white-space:pre-wrap;font-family:monospace;border:1px solid #1e293b}
+    .loader{width:24px;height:24px;border:3px solid #0FFCBE;border-bottom-color:transparent;border-radius:50%;display:inline-block;box-sizing:border-box;animation:rotation 1s linear infinite}
+    @keyframes rotation{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}
+    #apiKeyModal{transition:opacity .3s ease}
+  </style>
 </head>
-<body>
-  <div id="app">
-    <div id="pointer-glow"></div>
-    <header class="topbar">
-      <div class="brand">💊 MedRoutine</div>
-      <nav id="nav"></nav>
-    </header>
+<body class="overflow-x-hidden">
 
-    <main id="view"></main>
+  <!-- Header -->
+  <header id="header" class="fixed top-0 left-0 right-0 z-40 transition-all duration-300">
+    <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
+      <div class="text-2xl font-bold">
+        <a href="#" class="flex items-center space-x-2">
+          <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-brand-mint"><path d="M12 2a10 10 0 1 0 10 10c0-4.42-2.86-8-5-8.82"></path><path d="M12 10a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z"></path><path d="m14.29 12.3-1.82 1.82a2 2 0 0 0 0 2.83l1.71 1.71a2 2 0 0 0 2.83 0L22 14v-2h-2.12"></path></svg>
+          <span class="text-white">MedRoutine</span>
+        </a>
+      </div>
+      <div class="hidden md:flex items-center space-x-8">
+        <a href="#features" class="text-gray-300 hover:text-brand-mint transition">Features</a>
+        <a href="#ai-tools" class="text-gray-300 hover:text-brand-mint transition">AI Tools</a>
+        <a href="#how-it-works" class="text-gray-300 hover:text-brand-mint transition">How It Works</a>
+        <a href="#contact" class="text-gray-300 hover:text-brand-mint transition">Contact</a>
+      </div>
+      <div class="hidden md:flex items-center space-x-4">
+        <a href="/app/#/login" class="text-gray-300 hover:text-white transition">Login</a>
+        <a href="/app/#/register" class="bg-brand-blue text-white font-semibold px-5 py-2 rounded-lg hover:bg-opacity-90 transition glow-button">Sign Up Free</a>
+      </div>
+      <button id="mobile-menu-btn" class="md:hidden text-white">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" /></svg>
+      </button>
+    </nav>
+    <div id="mobile-menu" class="hidden md:hidden bg-slate-800">
+      <a href="#features" class="block py-2 px-6 text-white hover:bg-slate-700">Features</a>
+      <a href="#ai-tools" class="block py-2 px-6 text-white hover:bg-slate-700">AI Tools</a>
+      <a href="#how-it-works" class="block py-2 px-6 text-white hover:bg-slate-700">How It Works</a>
+      <a href="#contact" class="block py-2 px-6 text-white hover:bg-slate-700">Contact</a>
+      <div class="px-6 py-4 border-t border-slate-700">
+        <a href="/app/#/login" class="block text-white mb-3">Login</a>
+        <a href="/app/#/register" class="block bg-brand-blue text-white font-semibold px-5 py-2 rounded-lg text-center hover:bg-opacity-90 transition">Sign Up Free</a>
+      </div>
+    </div>
+  </header>
 
-    <footer class="footer">© <span id="year"></span> MedRoutine</footer>
-  </div>
+  <main>
+    <section class="relative min-h-screen flex items-center justify-center pt-20 overflow-hidden">
+      <canvas id="hero-canvas"></canvas>
+      <div class="container mx-auto px-6 text-center z-10">
+        <div class="max-w-4xl mx-auto">
+          <h1 class="text-5xl md:text-7xl font-extrabold mb-6 leading-tight hero-gradient-text reveal">Never Miss a Dose Again.</h1>
+          <p class="text-lg md:text-xl text-gray-300 max-w-2xl mx-auto mb-10 reveal" style="transition-delay:200ms">MedRoutine simplifies your medication management with smart reminders, AI-powered insights, and seamless caregiver connections.</p>
+          <div class="flex justify-center space-x-4 reveal" style="transition-delay:400ms">
+            <a href="/app/#/register" class="bg-brand-blue text-white font-bold py-3 px-8 rounded-lg text-lg hover:bg-opacity-90 transition-transform hover:scale-105 glow-button">Get Started for Free</a>
+            <a href="#features" class="bg-gray-700 bg-opacity-50 text-white font-bold py-3 px-8 rounded-lg text-lg hover:bg-opacity-80 transition-transform hover:scale-105">Learn More</a>
+          </div>
+        </div>
+      </div>
+    </section>
 
-  <script src="/app.js" type="module"></script>
+    <section id="features" class="py-24">
+      <div class="container mx-auto px-6">
+        <div class="text-center mb-16">
+          <h2 class="text-4xl md:text-5xl font-bold text-white mb-4 reveal">All-in-One Health Companion</h2>
+          <p class="text-lg text-gray-400 max-w-2xl mx-auto reveal" style="transition-delay:200ms">From reminders to reports, MedRoutine is packed with features designed for your peace of mind.</p>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8" id="feature-grid"></div>
+      </div>
+    </section>
+
+    <section id="ai-tools" class="py-24 bg-slate-900 bg-opacity-50">
+      <div class="container mx-auto px-6">
+        <div class="text-center mb-16">
+          <h2 class="text-4xl md:text-5xl font-bold hero-gradient-text mb-4 reveal">AI-Powered Health Tools</h2>
+          <p class="text-lg text-gray-400 max-w-3xl mx-auto reveal" style="transition-delay:200ms">Experience the future of personal health management. Ask questions, decode prescriptions, and get insights powered by Google's Gemini.</p>
+        </div>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <div class="ai-card glass-effect p-8 rounded-xl reveal" style="transition-delay:400ms">
+            <h3 class="text-2xl font-bold text-white mb-2">✨ AI Medication Lookup</h3>
+            <p class="text-gray-400 mb-4">Have a question about a medication? Ask in plain English.</p>
+            <div class="space-y-4">
+              <input id="med-question-input" type="text" class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-4 text-white focus:outline-none focus:ring-2 ring-brand-mint" placeholder="e.g., Can I take ibuprofen with metformin?">
+              <button id="ask-med-btn" class="w-full bg-brand-blue text-white font-semibold py-2 px-4 rounded-lg hover:bg-opacity-90 transition glow-button flex items-center justify-center">Ask Gemini</button>
+              <div id="med-result" class="ai-result text-gray-300">Your answer will appear here...</div>
+              <p class="text-xs text-gray-500 text-center">Disclaimer: AI-generated content is for informational purposes only and is not a substitute for professional medical advice.</p>
+            </div>
+          </div>
+          <div class="ai-card glass-effect p-8 rounded-xl reveal" style="transition-delay:600ms">
+            <h3 class="text-2xl font-bold text-white mb-2">✨ AI Prescription Translator</h3>
+            <p class="text-gray-400 mb-4">Decode confusing prescription instructions.</p>
+            <div class="space-y-4">
+              <textarea id="jargon-input" rows="3" class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-4 text-white focus:outline-none focus:ring-2 ring-brand-mint" placeholder="e.g., 1 TAB PO BID x 10D"></textarea>
+              <button id="translate-jargon-btn" class="w-full bg-brand-mint text-slate-900 font-semibold py-2 px-4 rounded-lg hover:bg-opacity-90 transition glow-button flex items-center justify-center">Translate</button>
+              <div id="jargon-result" class="ai-result text-gray-300">Your translation will appear here...</div>
+              <p class="text-xs text-gray-500 text-center">Disclaimer: Always confirm instructions with your pharmacist or doctor.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="how-it-works" class="py-24">
+      <div class="container mx-auto px-6">
+        <div class="text-center mb-16">
+          <h2 class="text-4xl md:text-5xl font-bold text-white mb-4 reveal">Get Started in 3 Simple Steps</h2>
+          <p class="text-lg text-gray-400 max-w-2xl mx-auto reveal" style="transition-delay:200ms">Managing your health has never been this easy.</p>
+        </div>
+        <div class="relative">
+          <div class="hidden md:block absolute top-1/2 left-0 w-full h-0.5 border-t-2 border-dashed border-gray-600 -translate-y-1/2"></div>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-12 relative">
+            <div class="text-center reveal">
+              <div class="relative inline-block mb-4">
+                <div class="w-20 h-20 rounded-full bg-brand-blue flex items-center justify-center text-3xl font-bold text-white ring-8 ring-slate-800">1</div>
+              </div>
+              <h3 class="text-2xl font-semibold text-white mb-2">Set Reminders</h3>
+              <p class="text-gray-400">Easily add your medications, dosages, and schedules. Our smart system takes care of the rest.</p>
+            </div>
+            <div class="text-center reveal" style="transition-delay:200ms">
+              <div class="relative inline-block mb-4">
+                <div class="w-20 h-20 rounded-full bg-brand-blue flex items-center justify-center text-3xl font-bold text-white ring-8 ring-slate-800">2</div>
+              </div>
+              <h3 class="text-2xl font-semibold text-white mb-2">Receive Alerts</h3>
+              <p class="text-gray-400">Get timely notifications on your phone, watch, or smart speaker so you never miss a dose.</p>
+            </div>
+            <div class="text-center reveal" style="transition-delay:400ms">
+              <div class="relative inline-block mb-4">
+                <div class="w-20 h-20 rounded-full bg-brand-blue flex items-center justify-center text-3xl font-bold text-white ring-8 ring-slate-800">3</div>
+              </div>
+              <h3 class="text-2xl font-semibold text-white mb-2">Stay Connected</h3>
+              <p class="text-gray-400">Share your progress with caregivers and healthcare providers for coordinated care.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="contact" class="py-24">
+      <div class="container mx-auto px-6">
+        <div class="text-center mb-16">
+          <h2 class="text-4xl md:text-5xl font-bold text-white mb-4 reveal">We'd Love to Hear From You</h2>
+          <p class="text-lg text-gray-400 max-w-2xl mx-auto reveal" style="transition-delay:200ms">Whether you have a question, feedback, or need support, our team is ready to help.</p>
+        </div>
+        <div class="max-w-2xl mx-auto glass-effect rounded-xl p-8 reveal" style="transition-delay:400ms">
+          <form>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+              <div>
+                <label for="name" class="block text-sm font-medium text-gray-300 mb-2">Name</label>
+                <input type="text" id="name" class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-4 text-white focus:outline-none focus:ring-2 ring-brand-mint" placeholder="Your Name">
+              </div>
+              <div>
+                <label for="email" class="block text-sm font-medium text-gray-300 mb-2">Email</label>
+                <input type="email" id="email" class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-4 text-white focus:outline-none focus:ring-2 ring-brand-mint" placeholder="your@email.com">
+              </div>
+            </div>
+            <div class="mb-6">
+              <label for="message" class="block text-sm font-medium text-gray-300 mb-2">Message</label>
+              <textarea id="message" rows="4" class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-4 text-white focus:outline-none focus:ring-2 ring-brand-mint" placeholder="How can we help?"></textarea>
+            </div>
+            <div class="text-center">
+              <button type="submit" class="bg-brand-blue text-white font-bold py-3 px-8 rounded-lg text-lg hover:bg-opacity-90 transition-transform hover:scale-105 glow-button">Send Message</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="bg-slate-900 bg-opacity-70 border-t border-slate-800">
+    <div class="container mx-auto px-6 py-8">
+      <div class="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
+        <p class="text-gray-400">© 2025 MedRoutine. All rights reserved.</p>
+        <div class="flex space-x-6">
+          <a href="#" class="text-gray-400 hover:text-white transition">Privacy Policy</a>
+          <a href="#" class="text-gray-400 hover:text-white transition">Terms of Service</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Marketing page scripts -->
+  <script>
+    const features = [
+      { icon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-8 h-8 text-brand-mint"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path><path d="M4 15h1.5a2.5 2.5 0 0 1 0 5H4"></path><path d="M18 15h1.5a2.5 2.5 0 0 0 0 5H18"></path><line x1="12" y1="12" x2="12" y2="12"></line><line x1="12" y1="5" x2="12" y2="5"></line><line x1="12" y1="19" x2="12" y2="19"></line></svg>', title: 'Medication Reminders', description: 'Set up customizable reminders for medications, appointments, and refills.' },
+      { icon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-8 h-8 text-brand-mint"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>', title: 'Info Lookup', description: 'Quickly access information about your medications, including side effects and interactions.' },
+      { icon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-8 h-8 text-brand-mint"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="18" x2="12" y2="12"></line><line x1="9" y1="15" x2="15" y2="15"></line></svg>', title: 'Med Management', description: 'Keep a complete history of your medications, dosages, and adherence records.' },
+      { icon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-8 h-8 text-brand-mint"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>', title: 'Missed Dose Support', description: 'Receive guidance on what to do if you miss a dose, based on your medication\'s profile.' },
+      { icon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-8 h-8 text-brand-mint"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>', title: 'Caregiver Access', description: 'Invite family or caregivers to view your schedule and receive notifications.' },
+      { icon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-8 h-8 text-brand-mint"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>', title: 'Security & Privacy', description: 'Your data is encrypted and secure, ensuring your health information remains confidential.' }
+    ];
+    const featureContainer = document.getElementById('feature-grid');
+    features.forEach((f,i)=>{ const d=document.createElement('div'); d.className='feature-card glass-effect p-8 rounded-xl reveal'; d.style.transitionDelay=`${i*100}ms`; d.innerHTML=`<div class="mb-4">${f.icon}</div><h3 class="text-2xl font-bold text-white mb-3">${f.title}</h3><p class="text-gray-400">${f.description}</p>`; featureContainer.appendChild(d); });
+    const mobileMenuBtn=document.getElementById('mobile-menu-btn'); const mobileMenu=document.getElementById('mobile-menu'); mobileMenuBtn.addEventListener('click',()=>{ mobileMenu.classList.toggle('hidden'); });
+    const header=document.getElementById('header'); window.addEventListener('scroll',()=>{ if(window.scrollY>50){ header.classList.add('glass-effect','shadow-lg'); } else { header.classList.remove('glass-effect','shadow-lg'); }});
+    const io=new IntersectionObserver((es)=>{ es.forEach(e=>{ if(e.isIntersecting) e.target.classList.add('visible'); }); },{threshold:.1});
+    document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+
+    // Hero Canvas Animation
+    const canvas=document.getElementById('hero-canvas'); const ctx=canvas.getContext('2d'); let particles=[]; const numParticles=100;
+    function resizeCanvas(){ canvas.width=window.innerWidth; canvas.height=window.innerHeight; }
+    class Particle{ constructor(x,y,r,c,v){ this.x=x; this.y=y; this.r=r; this.c=c; this.v=v; } draw(){ ctx.beginPath(); ctx.arc(this.x,this.y,this.r,0,Math.PI*2,false); ctx.fillStyle=this.c; ctx.fill(); ctx.closePath(); } update(){ this.x+=this.v.x; this.y+=this.v.y; if(this.x-this.r<0||this.x+this.r>canvas.width) this.v.x=-this.v.x; if(this.y-this.r<0||this.y+this.r>canvas.height) this.v.y=-this.v.y; this.draw(); }}
+    function initParticles(){ particles=[]; const colors=['#106EBE','#0FFCBE','#FFFFFF']; for(let i=0;i<numParticles;i++){ const r=Math.random()*2+1; const x=Math.random()*(canvas.width-r*2)+r; const y=Math.random()*(canvas.height-r*2)+r; const c=colors[Math.floor(Math.random()*colors.length)]; const v={x:(Math.random()-.5)*.5,y:(Math.random()-.5)*.5}; particles.push(new Particle(x,y,r,c,v)); } }
+    function connectParticles(){ for(let a=0;a<particles.length;a++){ for(let b=a;b<particles.length;b++){ const dx=particles[a].x-particles[b].x; const dy=particles[a].y-particles[b].y; const dist=Math.sqrt(dx*dx+dy*dy); if(dist<100){ ctx.strokeStyle=`rgba(15,252,190,${1-dist/100})`; ctx.lineWidth=.5; ctx.beginPath(); ctx.moveTo(particles[a].x,particles[a].y); ctx.lineTo(particles[b].x,particles[b].y); ctx.stroke(); ctx.closePath(); } } } }
+    function animate(){ requestAnimationFrame(animate); ctx.clearRect(0,0,canvas.width,canvas.height); particles.forEach(p=>p.update()); connectParticles(); }
+    window.addEventListener('resize',()=>{ resizeCanvas(); initParticles(); }); resizeCanvas(); initParticles(); animate();
+  </script>
 </body>
 </html>
