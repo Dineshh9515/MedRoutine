@@ -6,6 +6,7 @@ const helmet = require('helmet');
 const morgan = require('morgan');
 const compression = require('compression');
 const rateLimit = require('express-rate-limit');
+const path = require('path');
 
 const app = express();
 
@@ -32,6 +33,9 @@ app.use(morgan('combined'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Serve static frontend
+app.use(express.static(path.join(__dirname, 'public')));
+
 // Rate limiting
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
@@ -55,6 +59,16 @@ app.use('/api/caregivers', caregiverRoutes);
 app.use('/api/providers', providerRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/users', userRoutes);
+
+// Root landing route
+app.get('/', (req, res) => {
+  res.json({
+    status: 'OK',
+    message: 'MedRoutine API',
+    health: '/api/health',
+    timestamp: new Date().toISOString()
+  });
+});
 
 // Health check
 app.get('/api/health', (req, res) => {
